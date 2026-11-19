@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#205a3b">
+  <meta name="description" content="MVP navegable de RAIZE para registrar y consultar acciones ambientales verificadas.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <title>RAIZE — MVP</title>
+  <style>
+    :root{
+      --green-900:#183e2d;--green-800:#205a3b;--green-700:#2d704b;--green-100:#e8f3eb;
+      --cream:#fbf8f0;--paper:#fffdfa;--gold:#d8aa45;--gold-soft:#fff3d6;
+      --ink:#193127;--muted:#607269;--line:#dce5df;--danger:#a53f38;--blue:#2d6781;
+      --shadow:0 14px 40px rgba(22,58,42,.15);--radius:22px;
+    }
+    *{box-sizing:border-box}
+    html{font-size:17px}
+    body{
+      margin:0;min-height:100vh;color:var(--ink);
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:
+        radial-gradient(circle at 15% 0%,rgba(216,170,69,.25),transparent 32rem),
+        linear-gradient(145deg,#dcebdd,#f6f0df 55%,#d4e6da);
+    }
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    button:disabled{opacity:.48;cursor:not-allowed}
+    button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+      outline:4px solid rgba(216,170,69,.55);outline-offset:2px
+    }
+    .site{width:min(100%,480px);min-height:100vh;margin:auto;background:var(--cream);box-shadow:var(--shadow);position:relative;overflow:hidden}
+    .demo-ribbon{background:#142f24;color:#fff;padding:.48rem 1rem;font-size:.74rem;text-align:center;letter-spacing:.025em}
+    .topbar{
+      position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+      gap:.75rem;padding:.82rem 1rem;background:rgba(251,248,240,.96);border-bottom:1px solid var(--line);
+      backdrop-filter:blur(12px)
+    }
+    .brand{display:flex;align-items:center;gap:.55rem;font-weight:900;color:var(--green-900)}
+    .brand-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:13px;background:var(--green-800);color:white}
+    .brand small{display:block;color:var(--muted);font-weight:650;font-size:.66rem}
+    .status-pill{
+      border:0;border-radius:999px;padding:.46rem .66rem;display:flex;align-items:center;gap:.4rem;
+      background:var(--green-100);color:var(--green-900);font-size:.72rem;font-weight:800
+    }
+    .status-pill.offline{background:var(--gold-soft);color:#6e4c08}
+    .dot{width:.52rem;height:.52rem;border-radius:50%;background:#3c9861;box-shadow:0 0 0 4px rgba(60,152,97,.14)}
+    .offline .dot{background:#d59726;box-shadow:0 0 0 4px rgba(213,151,38,.14)}
+    main{min-height:calc(100vh - 145px);padding:1rem 1rem 6.5rem}
+    .screen{display:none;animation:fade .22s ease}
+    .screen.active{display:block}
+    @keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+    h1,h2,h3,p{margin-top:0}
+    h1{font-size:1.7rem;line-height:1.12;margin-bottom:.45rem}
+    h2{font-size:1.3rem;line-height:1.18;margin-bottom:.45rem}
+    h3{font-size:1rem;line-height:1.25;margin-bottom:.32rem}
+    p{line-height:1.48}
+    .muted{color:var(--muted)}
+    .eyebrow{font-size:.72rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--green-700);margin-bottom:.35rem}
+    .hero{
+      border-radius:28px;padding:1.25rem;color:white;overflow:hidden;position:relative;
+      background:linear-gradient(135deg,var(--green-900),var(--green-700));box-shadow:0 12px 25px rgba(31,89,59,.22)
+    }
+    .hero::after{content:"";position:absolute;right:-36px;bottom:-55px;width:170px;height:170px;border:28px solid rgba(255,255,255,.08);border-radius:50%}
+    .hero p{color:#dceee4;margin-bottom:1rem;max-width:80%}
+    .hero .btn{position:relative;z-index:1}
+    .section-title{display:flex;justify-content:space-between;align-items:end;margin:1.2rem 0 .65rem}
+    .section-title h2{font-size:1.02rem;margin:0}
+    .card{
+      background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:1rem;
+      box-shadow:0 7px 18px rgba(35,68,52,.055)
+    }
+    .card+.card{margin-top:.7rem}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}
+    .metric{padding:.88rem;background:var(--paper);border:1px solid var(--line);border-radius:18px}
+    .metric strong{display:block;font-size:1.35rem;color:var(--green-800)}
+    .metric span{font-size:.72rem;color:var(--muted);line-height:1.2}
+    .btn{
+      border:0;border-radius:16px;min-height:50px;padding:.78rem 1rem;font-weight:850;
+      display:inline-flex;align-items:center;justify-content:center;gap:.5rem;text-align:center
+    }
+    .btn-primary{background:var(--gold);color:#2f260f;box-shadow:0 8px 18px rgba(170,123,27,.24)}
+    .btn-green{background:var(--green-800);color:#fff}
+    .btn-secondary{background:var(--green-100);color:var(--green-900)}
+    .btn-ghost{background:transparent;color:var(--green-800);border:1px solid var(--line)}
+    .btn-danger{background:#f8e6e4;color:var(--danger)}
+    .btn-block{width:100%}
+    .btn-sm{min-height:39px;padding:.48rem .72rem;border-radius:12px;font-size:.76rem}
+    .icon{width:1.15rem;height:1.15rem;display:inline-block;vertical-align:middle}
+    .quick-list{display:grid;gap:.62rem}
+    .quick{
+      width:100%;display:flex;align-items:center;gap:.75rem;text-align:left;background:var(--paper);
+      border:1px solid var(--line);border-radius:18px;padding:.85rem
+    }
+    .quick.selected{border:2px solid var(--green-700);background:var(--green-100)}
+    .quick-icon{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:var(--green-100);color:var(--green-800);flex:none}
+    .quick strong{display:block;margin-bottom:.12rem}
+    .quick small{display:block;color:var(--muted);line-height:1.3}
+    .quick .chev{margin-left:auto;color:var(--muted);font-size:1.2rem}
+    .notice{display:flex;gap:.65rem;padding:.78rem .85rem;border-radius:16px;background:var(--gold-soft);color:#67490d;font-size:.78rem;line-height:1.4}
+    .notice.info{background:#e7f1f6;color:#28556b}
+    .notice.success{background:var(--green-100);color:var(--green-900)}
+    .notice.danger{background:#f8e6e4;color:#7c302b}
+    .timeline{display:grid;gap:.15rem}
+    .timeline-item{display:grid;grid-template-columns:28px 1fr;gap:.55rem;position:relative;padding:.15rem 0 .7rem}
+    .timeline-item:not(:last-child)::after{content:"";position:absolute;left:13px;top:26px;bottom:-3px;width:2px;background:var(--line)}
+    .timeline-dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--green-100);color:var(--green-800);font-size:.75rem;font-weight:900}
+    .timeline-dot.pending{background:var(--gold-soft);color:#8b6416}
+    .timeline-dot.wait{background:#edf0ee;color:#728078}
+    .timeline-item p{font-size:.75rem;color:var(--muted);margin:.08rem 0}
+    .tag{display:inline-flex;padding:.28rem .52rem;border-radius:999px;font-size:.66rem;font-weight:850;background:var(--green-100);color:var(--green-800)}
+    .tag.pending{background:var(--gold-soft);color:#76520b}
+    .tag.gray{background:#edf0ee;color:#52635a}
+    .progress-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem;margin:.5rem 0 1rem}
+    .progress-steps span{height:6px;border-radius:8px;background:#dfe6e1}
+    .progress-steps span.done{background:var(--green-700)}
+    .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:.62rem}
+    .choice{
+      min-height:128px;border:2px solid var(--line);background:var(--paper);border-radius:20px;padding:.85rem;
+      display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:.42rem
+    }
+    .choice.selected{border-color:var(--green-700);background:var(--green-100)}
+    .choice .choice-icon{font-size:1.7rem}
+    .choice strong{font-size:.87rem}
+    .choice small{font-size:.68rem;color:var(--muted);line-height:1.25}
+    .field{margin:.8rem 0}
+    label{display:block;font-size:.8rem;font-weight:850;margin:0 0 .35rem}
+    input,select,textarea{
+      width:100%;border:2px solid var(--line);border-radius:15px;background:#fff;padding:.78rem;color:var(--ink)
+    }
+    textarea{min-height:95px;resize:vertical}
+    .photo-box{
+      width:100%;border:2px dashed #9ab3a4;border-radius:22px;min-height:170px;background:#eef5ef;
+      display:grid;place-items:center;text-align:center;padding:1rem;color:var(--green-800)
+    }
+    .photo-box.captured{
+      border-style:solid;color:white;text-shadow:0 1px 2px rgba(0,0,0,.4);
+      background:
+        linear-gradient(rgba(20,60,38,.16),rgba(20,60,38,.4)),
+        linear-gradient(145deg,#9eb983,#4f7b4d 45%,#244f36 46%,#183a2b);
+    }
+    .review-row{display:flex;justify-content:space-between;gap:1rem;padding:.62rem 0;border-bottom:1px solid var(--line)}
+    .review-row:last-child{border:0}
+    .review-row span{color:var(--muted);font-size:.77rem}
+    .review-row strong{font-size:.8rem;text-align:right}
+    .actions{display:flex;gap:.55rem;margin-top:1rem}
+    .actions .btn{flex:1}
+    .success-mark{width:82px;height:82px;border-radius:50%;display:grid;place-items:center;background:var(--green-100);color:var(--green-800);font-size:2.3rem;margin:.6rem auto 1rem}
+    .center{text-align:center}
+    .credential{
+      border-radius:24px;padding:1.05rem;color:white;position:relative;overflow:hidden;
+      background:linear-gradient(135deg,#214d37,#327c51);box-shadow:0 12px 25px rgba(31,89,59,.22)
+    }
+    .credential::after{content:"RAIZE";position:absolute;right:-5px;bottom:-17px;font-size:3.8rem;font-weight:950;color:rgba(255,255,255,.07)}
+    .credential small{color:#d7ebdf}
+    .credential-code{font-size:1.25rem;font-weight:900;margin:.4rem 0}
+    .nav{
+      position:fixed;z-index:25;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,480px);
+      display:grid;grid-template-columns:repeat(4,1fr);background:rgba(255,253,250,.97);border-top:1px solid var(--line);
+      padding:.45rem .45rem calc(.45rem + env(safe-area-inset-bottom));backdrop-filter:blur(12px)
+    }
+    .nav button{border:0;background:transparent;color:var(--muted);padding:.38rem .15rem;font-size:.64rem;font-weight:750;display:grid;place-items:center;gap:.13rem}
+    .nav button.active{color:var(--green-800)}
+    .nav button span:first-child{font-size:1.15rem}
+    .role-menu{
+      position:fixed;z-index:40;inset:0;background:rgba(13,34,24,.62);display:none;align-items:flex-end;justify-content:center
+    }
+    .role-menu.open{display:flex}
+    .sheet{width:min(100%,480px);background:var(--paper);border-radius:26px 26px 0 0;padding:1.1rem 1rem calc(1.1rem + env(safe-area-inset-bottom))}
+    .role-option{width:100%;display:flex;align-items:center;gap:.7rem;text-align:left;border:1px solid var(--line);background:white;border-radius:17px;padding:.75rem;margin-top:.55rem}
+    .role-option.active{border:2px solid var(--green-700);background:var(--green-100)}
+    .role-option span:first-child{font-size:1.4rem}
+    .role-option small{display:block;color:var(--muted)}
+    .back{border:0;background:transparent;color:var(--green-800);font-weight:850;padding:.45rem 0;margin-bottom:.35rem}
+    .verifier-head{background:linear-gradient(135deg,#173b4a,#2d6781)}
+    .fund-head{background:linear-gradient(135deg,#4b3b16,#80631f)}
+    .sat-box{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
+    .sat-img{height:112px;border-radius:16px;display:flex;align-items:end;padding:.55rem;color:white;font-size:.68rem;font-weight:800;background:linear-gradient(145deg,#82905e,#385b45 48%,#1d3d31)}
+    .sat-img.after{background:linear-gradient(145deg,#91ad73,#3f744e 48%,#204f37)}
+    .bar{height:9px;border-radius:999px;background:#e5ebe7;overflow:hidden}
+    .bar span{display:block;height:100%;background:var(--green-700);border-radius:inherit}
+    .help-card{display:flex;gap:.8rem;align-items:flex-start}
+    .help-card .quick-icon{flex:none}
+    .toast{position:fixed;z-index:60;left:50%;bottom:6rem;transform:translate(-50%,25px);width:min(calc(100% - 2rem),440px);background:#153c2a;color:white;padding:.8rem 1rem;border-radius:16px;opacity:0;pointer-events:none;transition:.2s}
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    .hidden{display:none!important}
+    @media (min-width:760px){
+      body{padding:2rem 0}
+      .site{min-height:860px;border-radius:30px}
+      .nav{bottom:2rem;border-radius:0 0 30px 30px}
+      main{min-height:720px}
+    }
+    @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <button class="brand" onclick="openRoles()" aria-label="Cambiar perfil de demostración" style="border:0;background:transparent;padding:0;text-align:left">
+        <span class="brand-mark" aria-hidden="true">🌱</span>
+        <span>RAIZE<small id="roleLabel">Familia participante</small></span>
+      </button>
+      <button id="networkPill" class="status-pill offline" onclick="toggleNetwork()" aria-label="Cambiar conexión de demostración">
+        <span class="dot"></span><span id="networkText">Sin conexión</span>
+      </button>
+    </header>
+    <main id="main"></main>
+    <nav class="nav" id="familyNav" aria-label="Navegación principal">
+      <button class="active" data-nav="home" onclick="go('home')"><span>⌂</span><span>Inicio</span></button>
+      <button data-nav="actions" onclick="go('actions')"><span>✓</span><span>Mis acciones</span></button>
+      <button data-nav="help" onclick="go('help')"><span>?</span><span>Ayuda</span></button>
+      <button onclick="openRoles()"><span>☰</span><span>Demo</span></button>
+    </nav>
+    <div class="role-menu" id="roleMenu" onclick="closeRoles(event)">
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="roleTitle">
+        <h2 id="roleTitle">Cambiar vista de la demostración</h2>
+        <p class="muted">Cada persona ve únicamente lo que necesita para cumplir su tarea.</p>
+        <button class="role-option active" data-role-option="family" onclick="setRole('family')">
+          <span>👩🏽‍🌾</span><span><strong>Familia campesina</strong><small>Registra y consulta sus acciones.</small></span>
+        </button>
+        <button class="role-option" data-role-option="verifier" onclick="setRole('verifier')">
+          <span>🔎</span><span><strong>Verificador</strong><small>Revisa evidencia y explica la decisión.</small></span>
+        </button>
+        <button class="role-option" data-role-option="funder" onclick="setRole('funder')">
+          <span>📊</span><span><strong>Financiador</strong><small>Consulta resultados agregados, sin datos sensibles.</small></span>
+        </button>
+        <button class="btn btn-ghost btn-block" style="margin-top:.75rem" onclick="resetDemo()">Reiniciar demostración</button>
+      </div>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+  <script>
+    const $ = (s, root=document) => root.querySelector(s);
+    const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+    const icons = {
+      plus:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 5v14M5 12h14"/></svg>',
+      sync:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 7h-5V2M4 17h5v5"/><path d="M18.5 9a7 7 0 0 0-12-2L4 9m16 6-2.5 2a7 7 0 0 1-12-2"/></svg>',
+      camera:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h3l2-2h6l2 2h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+      audio:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H3v6h3l5 4zM15 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12"/></svg>'
+    };
+    const defaultState = {
+      role:'family', screen:'home', online:false, step:1, actionType:'', photo:false,
+      location:false, notes:'', queued:false, synced:false, approved:false, paid:false
+    };
+    let state = {...defaultState, ...JSON.parse(localStorage.getItem('raiz-demo') || '{}')};
+    function save(){ localStorage.setItem('raiz-demo', JSON.stringify(state)); }
+    const actionNames = {
+      forest:'Cuidado de bosque', regen:'Regeneración natural', restore:'Mantenimiento de restauración', threat:'Reporte de amenaza'
+    };
+    const templates = {
+      home: () => `
+        <section class="screen active">
+          <p class="eyebrow">Vereda El Porvenir · Demo</p>
+          <h1>Buenos días, Rosa</h1>
+          <p class="muted">Aquí puede registrar lo que hizo por el bosque y revisar cómo va su solicitud.</p>
+          ${!state.online ? `<div class="notice">📵 <span><strong>Puede seguir trabajando.</strong><br>Lo que registre se guardará en este teléfono y se enviará cuando vuelva la señal.</span></div>` : ''}
+          <div class="hero" style="margin-top:.8rem">
+            <h2>Registre una acción</h2>
+            <p>Le tomará cerca de 2 minutos. Puede hacerlo aunque no tenga señal.</p>
+            <button class="btn btn-primary" onclick="startRegister()">${icons.plus} Empezar registro</button>
+          </div>
+          <div class="section-title"><h2>Su avance</h2><button class="btn btn-ghost btn-sm" onclick="go('actions')">Ver detalle</button></div>
+          <div class="grid-2">
+            <div class="metric"><strong>${state.approved ? '1' : '0'}</strong><span>Acciones aprobadas</span></div>
+            <div class="metric"><strong>${state.queued && !state.approved ? '1' : '0'}</strong><span>${state.synced ? 'En revisión' : 'Pendiente de envío'}</span></div>
+          </div>
+          <div class="section-title"><h2>Lo más reciente</h2></div>
+          ${recentCard()}
+        </section>`,
+      actions: () => `
+        <section class="screen active">
+          <p class="eyebrow">Seguimiento sencillo</p>
+          <h1>Mis acciones</h1>
+          <p class="muted">Cada paso queda registrado. Si algo necesita corrección, se lo explicaremos aquí.</p>
+          ${state.queued ? actionCard(true) : `<div class="card center"><div style="font-size:2rem">🌿</div><h3>Aún no hay registros</h3><p class="muted">Registre la primera acción que realizó en su parcela.</p><button class="btn btn-green" onclick="startRegister()">Registrar ahora</button></div>`}
+        </section>`,
+      help: () => `
+        <section class="screen active">
+          <p class="eyebrow">Acompañamiento</p>
+          <h1>Ayuda</h1>
+          <p class="muted">Puede leer o escuchar estas instrucciones. No necesita conocer palabras técnicas.</p>
+          <div class="card help-card"><div class="quick-icon">1</div><div><h3>Registre lo que hizo</h3><p class="muted">Elija la actividad, confirme el lugar y tome una foto.</p><button class="btn btn-secondary btn-sm" onclick="speak('Primero elija la actividad que realizó. Después confirme el lugar y tome una foto.')">${icons.audio} Escuchar</button></div></div>
+          <div class="card help-card"><div class="quick-icon">2</div><div><h3>Espere la revisión</h3><p class="muted">Una persona revisará la información. La aplicación automática no decide sola.</p><button class="btn btn-secondary btn-sm" onclick="speak('Una persona verificadora revisará la información. Si hace falta algo, le explicará qué debe corregir.')">${icons.audio} Escuchar</button></div></div>
+          <div class="card help-card"><div class="quick-icon">3</div><div><h3>Consulte el resultado</h3><p class="muted">Cuando sea aprobada, verá una constancia y el estado del incentivo en pesos.</p><button class="btn btn-secondary btn-sm" onclick="speak('Cuando la acción sea aprobada verá su constancia y el estado del incentivo en pesos colombianos.')">${icons.audio} Escuchar</button></div></div>
+          <div class="notice info" style="margin-top:.8rem">☎️ <span><strong>Soporte del piloto</strong><br>En la implementación real habrá un monitor comunitario y atención presencial.</span></div>
+        </section>`,
+      register: () => registerFlow(),
+      saved: () => `
+        <section class="screen active center">
+          <div class="success-mark">✓</div>
+          <h1>La acción quedó guardada</h1>
+          <p class="muted">${state.online ? 'La enviamos para revisión.' : 'No se perdió: está segura en este teléfono. Se enviará cuando vuelva la señal.'}</p>
+          <div class="notice ${state.online ? 'success' : ''}" style="text-align:left;margin:1rem 0">${state.online ? '✓ Acción enviada al equipo verificador.' : '📵 1 acción pendiente de sincronización.'}</div>
+          ${!state.online ? `<button class="btn btn-green btn-block" onclick="connectAndSync()">${icons.sync} Simular regreso de señal</button>` : ''}
+          <button class="btn btn-ghost btn-block" style="margin-top:.55rem" onclick="go('actions')">Ver seguimiento</button>
+        </section>`,
+      verifier: () => verifierView(),
+      funder: () => funderView()
+    };
+    function recentCard(){
+      if(!state.queued) return `<button class="quick" onclick="startRegister()"><span class="quick-icon">🌳</span><span><strong>No hay acciones registradas</strong><small>Empiece con una actividad que ya realizó.</small></span><span class="chev">›</span></button>`;
+      return actionCard(false);
+    }
+    function actionCard(full){
+      const label = state.approved ? 'Aprobada' : state.synced ? 'En revisión' : 'Guardada sin conexión';
+      const tagClass = state.approved ? '' : 'pending';
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;gap:.6rem;align-items:start">
+          <div><span class="tag ${tagClass}">${label}</span><h3 style="margin-top:.55rem">${actionNames[state.actionType] || 'Acción ambiental'}</h3><p class="muted" style="font-size:.75rem;margin:0">Parcela La Esperanza · 17 nov. 2026</p></div>
+          <span style="font-size:1.7rem">🌳</span>
+        </div>
+        ${full ? `<div class="timeline" style="margin-top:1rem">
+          <div class="timeline-item"><span class="timeline-dot">✓</span><div><strong>Registro guardado</strong><p>La información y la foto quedaron protegidas.</p></div></div>
+          <div class="timeline-item"><span class="timeline-dot ${state.synced?'':'pending'}">${state.synced?'✓':'2'}</span><div><strong>${state.synced?'Información enviada':'Esperando señal'}</strong><p>${state.synced?'El equipo verificador recibió el registro.':'Toque “Sincronizar” cuando tenga conexión.'}</p></div></div>
+          <div class="timeline-item"><span class="timeline-dot ${state.approved?'':'wait'}">${state.approved?'✓':'3'}</span><div><strong>${state.approved?'Acción aprobada':'Revisión humana'}</strong><p>${state.approved?'La evidencia cumple los criterios del piloto.':'Una persona revisará la evidencia y las alertas.'}</p></div></div>
+          <div class="timeline-item"><span class="timeline-dot ${state.paid?'':'wait'}">${state.paid?'✓':'4'}</span><div><strong>${state.paid?'Pago de prueba confirmado':'Incentivo'}</strong><p>${state.paid?'Monto ilustrativo: $150.000 COP. No es un pago real.':'Solo se ordena después de la aprobación.'}</p></div></div>
+        </div>
+        ${!state.synced && state.online ? `<button class="btn btn-green btn-block" onclick="syncNow()">${icons.sync} Sincronizar ahora</button>` : ''}
+        ${state.approved ? `<button class="btn btn-secondary btn-block" onclick="showCredential()">Ver constancia digital</button>` : ''}
+        ` : ''}
+      </div>`;
+    }
+    function registerFlow(){
+      const steps = `<div class="progress-steps">${[1,2,3,4].map(n=>`<span class="${n<=state.step?'done':''}"></span>`).join('')}</div>`;
+      if(state.step===1) return `<section class="screen active"><button class="back" onclick="go('home')">← Volver</button><p class="eyebrow">Paso 1 de 4</p><h1>¿Qué acción realizó?</h1><p class="muted">Elija una opción. Si tiene dudas, puede pedir ayuda al monitor.</p>${steps}<div class="choice-grid">
+        ${choice('forest','🌳','Cuidé el bosque','Conservación de cobertura natural')}
+        ${choice('regen','🌱','Apoyé la regeneración','Cuidado de nuevos brotes naturales')}
+        ${choice('restore','🪴','Hice mantenimiento','Seguimiento de una restauración')}
+        ${choice('threat','⚠️','Reporté una amenaza','Cambio de cobertura o riesgo')}
+      </div><button class="btn btn-green btn-block" style="margin-top:1rem" ${state.actionType?'':'disabled'} onclick="nextStep()">Continuar</button></section>`;
+      if(state.step===2) return `<section class="screen active"><button class="back" onclick="prevStep()">← Volver</button><p class="eyebrow">Paso 2 de 4</p><h1>Confirme el lugar</h1><p class="muted">La ubicación exacta está protegida. No se mostrará en reportes públicos.</p>${steps}
+        <div class="field"><label>Parcela o lugar</label><select><option>Parcela La Esperanza</option></select></div>
+        <button class="quick ${state.location?'selected':''}" onclick="captureLocation()"><span class="quick-icon">📍</span><span><strong>${state.location?'Ubicación confirmada':'Usar ubicación del teléfono'}</strong><small>${state.location?'Guardada de forma protegida':'Toque aquí estando en el lugar de la acción'}</small></span><span class="chev">${state.location?'✓':'›'}</span></button>
+        <div class="notice info" style="margin-top:.8rem">🔒 <span>La coordenada exacta solo podrá verla el equipo autorizado de verificación.</span></div>
+        <button class="btn btn-green btn-block" style="margin-top:1rem" ${state.location?'':'disabled'} onclick="nextStep()">Continuar</button>
+      </section>`;
+      if(state.step===3) return `<section class="screen active"><button class="back" onclick="prevStep()">← Volver</button><p class="eyebrow">Paso 3 de 4</p><h1>Tome una foto</h1><p class="muted">Procure mostrar el lugar completo. La foto se puede guardar sin señal.</p>${steps}
+        <button class="photo-box ${state.photo?'captured':''}" onclick="capturePhoto()">
+          <span>${state.photo?'<span style="font-size:2.4rem">✓</span><br><strong>Foto guardada</strong><br><small>17 nov. 2026 · 8:42 a. m.</small>':icons.camera+'<br><strong>Tomar foto</strong><br><small>También puede elegir una foto reciente</small>'}</span>
+        </button>
+        <div class="field"><label for="notes">Cuéntenos algo más (opcional)</label><textarea id="notes" placeholder="Ejemplo: retiré maleza alrededor de los árboles jóvenes" oninput="state.notes=this.value;save()">${state.notes||''}</textarea></div>
+        <button class="btn btn-green btn-block" ${state.photo?'':'disabled'} onclick="nextStep()">Revisar información</button>
+      </section>`;
+      return `<section class="screen active"><button class="back" onclick="prevStep()">← Volver</button><p class="eyebrow">Paso 4 de 4</p><h1>Revise antes de guardar</h1><p class="muted">Si algo no está bien, puede volver y corregirlo.</p>${steps}
+        <div class="card">
+          <div class="review-row"><span>Acción</span><strong>${actionNames[state.actionType]}</strong></div>
+          <div class="review-row"><span>Lugar</span><strong>Parcela La Esperanza</strong></div>
+          <div class="review-row"><span>Ubicación</span><strong>Confirmada y protegida</strong></div>
+          <div class="review-row"><span>Evidencia</span><strong>1 foto</strong></div>
+          <div class="review-row"><span>Conexión</span><strong>${state.online?'Disponible':'Sin señal; se guardará aquí'}</strong></div>
+        </div>
+        <label style="display:flex;gap:.6rem;align-items:start;margin-top:.8rem;font-weight:650"><input type="checkbox" checked style="width:22px;height:22px;flex:none;margin:0"> Confirmo que la información corresponde a una acción realizada en mi parcela.</label>
+        <button class="btn btn-primary btn-block" style="margin-top:1rem" onclick="submitAction()">${state.online?'Enviar para revisión':'Guardar en este teléfono'}</button>
+      </section>`;
+    }
+    function choice(value,emoji,title,small){return `<button class="choice ${state.actionType===value?'selected':''}" onclick="selectAction('${value}')"><span class="choice-icon">${emoji}</span><strong>${title}</strong><small>${small}</small></button>`}
+    function verifierView(){
+      return `<section class="screen active">
+        <div class="hero verifier-head"><p class="eyebrow" style="color:#bfe0ed">Vista del verificador</p><h1>Revisión técnica</h1><p>Las reglas y alertas apoyan la revisión, pero la decisión final la toma una persona.</p></div>
+        <div class="section-title"><h2>Registro recibido</h2><span class="tag ${state.synced?'pending':'gray'}">${state.synced?'Prioridad media':'Sin registros'}</span></div>
+        ${state.synced ? `<div class="card">
+          <div style="display:flex;justify-content:space-between"><div><h3>${actionNames[state.actionType]}</h3><p class="muted" style="font-size:.74rem">Código protegido: FAM-014 · Evidencia E-025</p></div><span style="font-size:1.7rem">🔎</span></div>
+          <div class="notice success">✓ Registro completo, fecha válida y sin duplicados detectados.</div>
+          <h3 style="margin-top:1rem">Comparación de cobertura</h3>
+          <div class="sat-box"><div class="sat-img">Línea base<br>ago. 2026</div><div class="sat-img after">Registro<br>nov. 2026</div></div>
+          <div class="review-row"><span>Alerta satelital</span><strong>No detectada</strong></div>
+          <div class="review-row"><span>Ubicación</span><strong>Dentro del área acordada</strong></div>
+          <div class="review-row"><span>Riesgo calculado</span><strong>Medio · revisión humana</strong></div>
+          ${state.approved ? `<div class="notice success" style="margin-top:.8rem">✓ Acción aprobada. Se emitió una constancia no transferible.</div>` : `<div class="actions"><button class="btn btn-danger" onclick="toast('Se solicitaría una corrección explicada a la familia.')">Pedir corrección</button><button class="btn btn-green" onclick="approveAction()">Aprobar acción</button></div>`}
+        </div>` : `<div class="card center"><h3>No hay registros sincronizados</h3><p class="muted">Vuelva al perfil de familia y sincronice la acción.</p><button class="btn btn-secondary" onclick="setRole('family')">Ir a familia</button></div>`}
+        <div class="notice info" style="margin-top:.8rem">🛡️ La identidad y las coordenadas exactas no se publican ni se guardan en la credencial distribuida.</div>
+      </section>`;
+    }
+    function funderView(){
+      return `<section class="screen active">
+        <div class="hero fund-head"><p class="eyebrow" style="color:#f4df9c">Vista agregada</p><h1>Resultados del piloto</h1><p>Información de demostración sin nombres, datos financieros ni coordenadas exactas.</p></div>
+        <div class="section-title"><h2>Indicadores</h2><span class="tag gray">Escenario simulado</span></div>
+        <div class="grid-2">
+          <div class="metric"><strong>${state.approved?'1':'0'}</strong><span>Acciones verificadas</span></div>
+          <div class="metric"><strong>0</strong><span>Datos sensibles expuestos</span></div>
+          <div class="metric"><strong>${state.approved?'100%':'—'}</strong><span>Trazabilidad completa</span></div>
+          <div class="metric"><strong>60</strong><span>Familias meta del piloto</span></div>
+        </div>
+        <div class="card" style="margin-top:.8rem">
+          <h3>Ciclo de trazabilidad</h3>
+          <div class="review-row"><span>1. Acción y evidencia</span><strong>${state.queued?'Registrada':'Pendiente'}</strong></div>
+          <div class="review-row"><span>2. Decisión humana</span><strong>${state.approved?'Aprobada':'Pendiente'}</strong></div>
+          <div class="review-row"><span>3. Constancia</span><strong>${state.approved?'RZ-DEMO-025':'Pendiente'}</strong></div>
+          <div class="review-row"><span>4. Pago en COP</span><strong>${state.paid?'Confirmado · demo':'Pendiente'}</strong></div>
+        </div>
+        <div class="card" style="margin-top:.8rem">
+          <h3>Avance de la meta académica</h3><p class="muted" style="font-size:.77rem">Prototipo navegable de Fase 0</p>
+          <div class="bar"><span style="width:100%"></span></div>
+          <p style="font-size:.72rem;color:var(--muted);margin:.45rem 0 0">Este tablero no afirma impactos ambientales reales.</p>
+        </div>
+      </section>`;
+    }
+    function render(){
+      const key = state.role==='family' ? state.screen : state.role;
+      $('#main').innerHTML = (templates[key] || templates.home)();
+      $('#roleLabel').textContent = state.role==='family'?'Familia participante':state.role==='verifier'?'Equipo verificador':'Financiador';
+      $('#familyNav').classList.toggle('hidden', state.role!=='family' || ['register','saved'].includes(state.screen));
+      $$('.nav button[data-nav]').forEach(b=>b.classList.toggle('active',b.dataset.nav===state.screen));
+      $$('.role-option').forEach(b=>b.classList.toggle('active',b.dataset.roleOption===state.role));
+      updateNetwork();
+      window.scrollTo({top:0,behavior:'smooth'});
+      save();
+    }
+    function go(screen){state.screen=screen;render()}
+    function startRegister(){state.screen='register';state.step=1;render()}
+    function selectAction(type){state.actionType=type;render()}
+    function nextStep(){if(state.step<4)state.step++;render()}
+    function prevStep(){if(state.step>1){state.step--;render()}else go('home')}
+    function captureLocation(){state.location=true;toast('Ubicación protegida guardada.');render()}
+    function capturePhoto(){state.photo=true;toast('Foto guardada en el teléfono.');render()}
+    function submitAction(){state.queued=true;state.synced=state.online;state.screen='saved';render()}
+    function toggleNetwork(){state.online=!state.online;updateNetwork();save();toast(state.online?'La conexión volvió. Ya puede sincronizar.':'Modo sin conexión activado.')}
+    function connectAndSync(){state.online=true;state.synced=true;render();toast('Acción sincronizada de forma segura.')}
+    function syncNow(){state.synced=true;render();toast('Acción enviada al equipo verificador.')}
+    function approveAction(){state.approved=true;state.paid=true;render();toast('Acción aprobada y pago de prueba confirmado.')}
+    function showCredential(){
+      $('#main').innerHTML=`<section class="screen active"><button class="back" onclick="go('actions')">← Volver</button><p class="eyebrow">Constancia de acción verificada</p><h1>Su acción fue aprobada</h1><div class="credential"><small>Credencial digital no transferible</small><div class="credential-code">RZ-DEMO-025</div><strong>${actionNames[state.actionType]}</strong><p style="margin:.45rem 0 0">Aprobada el 17 de noviembre de 2026</p></div><div class="notice info" style="margin-top:.8rem">ℹ️ Esta constancia no es dinero, crédito de carbono ni título sobre la tierra.</div><div class="card" style="margin-top:.8rem"><h3>Pago de demostración</h3><div class="review-row"><span>Estado</span><strong>Confirmado</strong></div><div class="review-row"><span>Monto ilustrativo</span><strong>$150.000 COP</strong></div><div class="review-row"><span>Proveedor</span><strong>Proveedor regulado · demo</strong></div><p class="muted" style="font-size:.7rem;margin:.6rem 0 0">No se realizó una transferencia real.</p></div></section>`;
+      $('#familyNav').classList.add('hidden');window.scrollTo(0,0);
+    }
+    function updateNetwork(){
+      const pill=$('#networkPill'), text=$('#networkText');
+      if(!pill)return;
+      pill.classList.toggle('offline',!state.online);
+      text.textContent=state.online?'Con conexión':'Sin conexión';
+    }
+    function openRoles(){$('#roleMenu').classList.add('open')}
+    function closeRoles(e){if(e.target.id==='roleMenu')$('#roleMenu').classList.remove('open')}
+    function setRole(role){state.role=role;state.screen=role==='family'?'home':role;$('#roleMenu').classList.remove('open');render()}
+    function resetDemo(){state={...defaultState};save();$('#roleMenu').classList.remove('open');render();toast('Demostración reiniciada.')}
+    function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),2600)}
+    function speak(text){
+      if('speechSynthesis' in window){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(text));toast('Reproduciendo la explicación.')}
+      else toast('La lectura en voz alta no está disponible en este navegador.');
+    }
+    if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+    render();
+  </script>
+</body>
+</html>

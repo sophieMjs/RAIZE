@@ -1,0 +1,37 @@
+MVP RAÍZ - PROTOTIPO ACADÉMICO
+================================
+
+CÓMO ABRIRLO
+
+1. Extraiga completamente el archivo ZIP.
+2. Abra la carpeta extraída.
+3. Haga doble clic en index.html.
+4. El MVP se abrirá en el navegador sin necesitar Internet.
+
+ANTES DE GRABAR O PRESENTAR
+
+1. Entre al menú Demo.
+2. Presione Reiniciar demostración.
+3. Compruebe que la aplicación diga Sin conexión.
+4. Use el navegador en pantalla completa con la tecla F11.
+
+RECORRIDO SUGERIDO
+
+1. Familia campesina: registrar una acción sin conexión.
+2. Simular regreso de señal y sincronizar.
+3. Cambiar al perfil Verificador y aprobar la acción.
+4. Regresar a Familia campesina y mostrar la constancia.
+5. Cambiar a Financiador para mostrar resultados agregados.
+
+IMPORTANTE
+
+- Los datos, la ubicación, el análisis satelital y los pagos son simulados.
+- No se realiza ninguna transferencia real.
+- La credencial no representa dinero, tierra ni un crédito de carbono.
+- Para la demostración no se requiere instalar programas ni crear cuentas.
+
+ARCHIVOS
+
+- index.html: aplicación principal.
+- manifest.webmanifest e icon.svg: identidad instalable del prototipo.
+- sw.js: soporte de caché cuando se ejecuta desde un servidor local.
